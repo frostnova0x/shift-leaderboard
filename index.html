@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shift >Squiz Leaderboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+  
+    :root {
+      --bg-main: #0b1a3d;            
+      --bg-card: rgba(255,255,255,0.08);
+      --bg-hover: rgba(90,160,255,0.1);
+      --text: #dbe9ff;
+      --text-accent: #a0c4ff;
+      --table-header: rgba(20,40,80,0.45);
+      --border: rgba(255,255,255,0.12);
+      --details-bg: rgba(255,255,255,0.08);
+    }
+
+    [data-theme="light"] {
+      --bg-main: #9dcaeb;         
+      --bg-card: rgba(255,255,255,0.85);
+      --bg-hover: rgba(0,0,0,0.05);
+      --text: #1a1a1a;
+      --text-accent: #0050cc;
+      --table-header: rgba(0,70,160,0.15);
+      --border: rgba(0,0,0,0.15);
+      --details-bg: rgba(0,0,0,0.05);
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: "Inter", Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text);
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .logo {
+      width: 120px;
+      margin-top: 10px;
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.35));
+    }
+
+    h1 {
+      font-size: 32px;
+      margin: 15px 0 5px;
+      color: var(--text-accent);
+    }
+
+    .sub-links {
+      margin-top: 5px;
+      font-size: 15px;
+      opacity: 0.95;
+    }
+
+    .sub-links a {
+      color: var(--text-accent);
+      text-decoration: none;
+      margin: 0 8px;
+    }
+
+    .sub-links a:hover {
+      text-decoration: underline;
+    }
+
+    .theme-toggle {
+      margin-top: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-accent);
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.10);
+      border-radius: 6px;
+      display: inline-block;
+      transition: 0.25s;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255,255,255,0.18);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+      backdrop-filter: blur(12px);
+      transition: background 0.3s ease, border 0.3s ease;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      color: var(--text);
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--table-header);
+      color: var(--text-accent);
+      font-weight: 600;
+    }
+
+    tr:hover:not(.details-row) {
+      background: var(--bg-hover);
+    }
+
+    .details-btn {
+      cursor: pointer;
+      color: var(--text-accent);
+      text-decoration: underline;
+      font-size: 14px;
+    }
+
+    .details-row td {
+      background: var(--details-bg);
+    }
+
+    .week-details {
+      display: none;
+      text-align: left;
+      padding: 12px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 26px; }
+      table { font-size: 14px; }
+      .details-btn { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <img src="shift_logo.png" class="logo" alt="Project Logo">
+
+  <h1>Shift >Squiz Leaderboard</h1>
+
+  <div class="sub-links">
+    <a href="https://x.com/shiftfdn" target="_blank">Shift Foundation</a> •
+    <a href="https://x.com/frostnova0x" target="_blank">made with ❤️ by Frostnova</a>
+  </div>
+
+  <div class="theme-toggle" onclick="toggleTheme()">Toggle Dark / Light Mode</div>
+
+  <div class="card">
+    <table id="leaderboard">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Total Score</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<script>
+  const csvURL = "leaderboard.csv";
+
+  async function loadLeaderboard() {
+    const res = await fetch(csvURL);
+    const text = await res.text();
+
+    const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+    const rows = parsed.data;
+
+    rows.sort((a, b) => parseInt(b["Total Score"]) - parseInt(a["Total Score"]));
+
+    const tbody = document.querySelector("#leaderboard tbody");
+    tbody.innerHTML = "";
+
+    rows.forEach((row, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${row["Name"]}</td>
+        <td>${row["Total Score"]}</td>
+        <td><span class="details-btn">View</span></td>
+      `;
+
+      const detailsRow = document.createElement("tr");
+      detailsRow.classList.add("details-row");
+      detailsRow.style.display = "none";
+
+      const td = document.createElement("td");
+      td.colSpan = 4;
+
+      const detailsDiv = document.createElement("div");
+      detailsDiv.className = "week-details";
+
+      let breakdown = "<strong>Weekly Breakdown</strong><br><br>";
+
+      Object.keys(row).forEach(k => {
+        if (k.toLowerCase().includes("week")) {
+          breakdown += `${k}: <strong>${row[k]}</strong><br>`;
+        }
+      });
+
+      detailsDiv.innerHTML = breakdown;
+      td.appendChild(detailsDiv);
+      detailsRow.appendChild(td);
+
+      tbody.appendChild(tr);
+      tbody.appendChild(detailsRow);
+
+      tr.querySelector(".details-btn").addEventListener("click", () => {
+        const visible = detailsRow.style.display === "table-row";
+        detailsRow.style.display = visible ? "none" : "table-row";
+        detailsDiv.style.display = visible ? "none" : "block";
+      });
+    });
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute("data-theme");
+    const next = current === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+  }
+
+  if (localStorage.getItem("theme")) {
+    document.documentElement.setAttribute("data-theme", localStorage.getItem("theme"));
+  }
+
+  loadLeaderboard();
+  setInterval(loadLeaderboard, 60000);
+</script>
+
+</body>
+</html>
